@@ -198,6 +198,7 @@
     <Compile Include="Content\Components\WarpDrive\WarpDriveModManager.cs" />
     <Compile Include="Content\Items\ItemMod.cs" />
     <Compile Include="Content\Items\ItemModManager.cs" />
+    <Compile Include="Content\Talents\TalentEnumerator.cs" />
     <Compile Include="Content\Talents\TalentMod.cs" />
     <Compile Include="Content\Talents\TalentModManager.cs" />
     <Compile Include="Content\Talents\TalentTreeMod.cs" />

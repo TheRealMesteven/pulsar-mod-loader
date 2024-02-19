@@ -7,6 +7,7 @@ using CodeStage.AntiCheat.ObscuredTypes;
 using static PulsarModLoader.Patches.HarmonyHelpers;
 using static HarmonyLib.AccessTools;
 using System.Reflection.Emit;
+using System.Linq;
 
 namespace PulsarModLoader.Content.Talents
 {
@@ -84,7 +85,9 @@ namespace PulsarModLoader.Content.Talents
             int subtypeformodded = (int)inTalent - TalentModManager.Instance.vanillaTalentMaxType;
             if (subtypeformodded <= TalentModManager.Instance.TalentTypes.Count && subtypeformodded > -1)
             {
-                __result = TalentModManager.Instance.TalentTypes[subtypeformodded].TalentInfo;
+                TalentInfo talentInfo = TalentModManager.Instance.TalentTypes[subtypeformodded].TalentInfo;
+                talentInfo.TalentID = (int)inTalent;
+                __result = talentInfo;
                 return false;
             }
             return true;
@@ -99,7 +102,7 @@ namespace PulsarModLoader.Content.Talents
         {
             if (__instance == null || __instance.Talents == null) return;
             int TalentMaxSize = TalentModManager.Instance.moddedTalentMaxType;
-            if (__instance.Talents.Length <  TalentMaxSize)
+            if (__instance.Talents.Length < TalentMaxSize)
             {
                 __instance.Talents = new ObscuredInt[TalentMaxSize];
                 __instance.TalentsLocalEditTime = new float[TalentMaxSize];
@@ -109,14 +112,14 @@ namespace PulsarModLoader.Content.Talents
 
     // Allows new Talents to be researchable
     [HarmonyPatch(typeof(PLShipInfo), "UpdateResearchTalentChoices")]
-    class ResearchTalentSizePatch
+    public class ResearchTalentSizePatch
     {
-        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             return PatchBySequence(instructions,
             new List<CodeInstruction>()
             {
-                new CodeInstruction(OpCodes.Ldc_I4_S, 0x3F),
+                new CodeInstruction(OpCodes.Ldc_I4_S, (sbyte)63),
             },
             new List<CodeInstruction>()
             {
@@ -124,23 +127,19 @@ namespace PulsarModLoader.Content.Talents
             },
             PatchMode.REPLACE, showDebugOutput: true);
         }
-        static int Patch()
-        {
-            PulsarModLoader.Utilities.Logger.Info("ResearchTalentSizePatch");
-            return TalentModManager.Instance.moddedTalentMaxType;
-        }
+        public static int Patch() => TalentModManager.Instance.moddedTalentMaxType;
     }
 
     // Allows new Talents to be synced with joining players
     [HarmonyPatch(typeof(PLPlayer), "SendTalentsToPhotonTargets")]
-    class TalentSerializePatch
+    public class TalentSerializePatch
     {
-        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             return PatchBySequence(instructions,
             new List<CodeInstruction>()
             {
-                new CodeInstruction(OpCodes.Ldc_I4_S, 0x3F),
+                new CodeInstruction(OpCodes.Ldc_I4_S, (sbyte)63),
             },
             new List<CodeInstruction>()
             {
@@ -148,10 +147,6 @@ namespace PulsarModLoader.Content.Talents
             },
             PatchMode.REPLACE, showDebugOutput: true);
         }
-        static int Patch()
-        {
-            PulsarModLoader.Utilities.Logger.Info("TalentSerializePatch");
-            return TalentModManager.Instance.moddedTalentMaxType;
-        }
+        public static int Patch() => TalentModManager.Instance.moddedTalentMaxType;
     }
 }
