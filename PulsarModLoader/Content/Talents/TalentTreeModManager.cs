@@ -89,13 +89,15 @@ namespace PulsarModLoader.Content.Talents
             foreach (TalentMod talentMod in TalentModManager.Instance.TalentTypes)
             {
                 if ((talentMod.ClassID != ClassID && talentMod.ClassID != -1)
-                    || (talentMod.Race != null && !talentMod.Race.Contains(RaceID))) continue;
+                    || (talentMod.Race != null && !talentMod.Race.Contains(RaceID))
+                    || (talentMod.Faction != null && !talentMod.Faction.Contains(PLServer.Instance.CrewFactionID))) continue;
                 list.Add((ETalents)TalentModManager.Instance.GetTalentIDFromName(talentMod.Name));
             }
             foreach(TalentTreeMod eTalents in TalentTreeModManager.Instance.TalentOverrides.Values)
             {
                 if ((eTalents.ClassID != ClassID && eTalents.ClassID != -1)
-                    || (eTalents.Race != null && !eTalents.Race.Contains(RaceID)))
+                    || (eTalents.Race != null && !eTalents.Race.Contains(RaceID))
+                    || (eTalents.Faction != null && !eTalents.Faction.Contains(PLServer.Instance.CrewFactionID)))
                 {
                     if (list.Contains(eTalents.Talent)) list.Remove(eTalents.Talent);
                     continue;

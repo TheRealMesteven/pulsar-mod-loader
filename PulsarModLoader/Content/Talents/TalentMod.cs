@@ -14,6 +14,7 @@ namespace PulsarModLoader.Content.Talents
         public virtual ETalents ExtendsDefaultTalent { get { return ETalents.MAX; } }
         public virtual int MinLevel { get { return 0; } }
         public virtual int[] Race { get { return null; } } // 0 = Human, 1 = Sylvassi, 2 = Robot
+        public virtual int[] Faction { get { return null; } } // -1 = Unaligned, 0 = CU, 1 = AOG, 2 = WD, 3 = FB, 5 = PT
 
         public virtual TalentInfo TalentInfo
         {
