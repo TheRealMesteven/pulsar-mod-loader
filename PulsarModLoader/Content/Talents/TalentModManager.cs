@@ -31,7 +31,7 @@ namespace PulsarModLoader.Content.Talents
         TalentModManager()
         {
             vanillaTalentMaxType = Enum.GetValues(typeof(ETalents)).Length;
-            Logger.Info($"MaxTalentint = {vanillaTalentMaxType - 1}");
+            Logger.Info($"MaxTalentId = {vanillaTalentMaxType - 1}");
             foreach (PulsarMod mod in ModManager.Instance.GetAllMods())
             {
                 Assembly asm = mod.GetType().Assembly;
@@ -54,6 +54,7 @@ namespace PulsarModLoader.Content.Talents
                 }
             }
             moddedTalentMaxType = vanillaTalentMaxType + TalentTypes.Count;
+            Logger.Info($"ModdedMaxTalentId = {moddedTalentMaxType - 1}");
         }
 
         /// <summary>
@@ -67,7 +68,6 @@ namespace PulsarModLoader.Content.Talents
             {
                 if (TalentTypes[i].Name == TalentName)
                 {
-                    PulsarModLoader.Utilities.Logger.Info($"Talent Retrieval: {TalentName} {i + vanillaTalentMaxType}");
                     return i + vanillaTalentMaxType;
                 }
             }
@@ -84,7 +84,6 @@ namespace PulsarModLoader.Content.Talents
             int subtypeformodded = (int)inTalent - TalentModManager.Instance.vanillaTalentMaxType;
             if (subtypeformodded <= TalentModManager.Instance.TalentTypes.Count && subtypeformodded > -1)
             {
-                Logger.Info("Creating Talent from list info");
                 __result = TalentModManager.Instance.TalentTypes[subtypeformodded].TalentInfo;
                 return false;
             }
@@ -99,14 +98,11 @@ namespace PulsarModLoader.Content.Talents
         static void Prefix(PLPlayer __instance)
         {
             if (__instance == null || __instance.Talents == null) return;
-            PulsarModLoader.Utilities.Logger.Info($"[Size] Talents: {__instance.Talents.Length}");
             int TalentMaxSize = TalentModManager.Instance.moddedTalentMaxType;
             if (__instance.Talents.Length <  TalentMaxSize)
             {
-                PulsarModLoader.Utilities.Logger.Info($"[EnsureTalentSizePatch] Talent Max Size = {TalentMaxSize - 1}");
                 __instance.Talents = new ObscuredInt[TalentMaxSize];
                 __instance.TalentsLocalEditTime = new float[TalentMaxSize];
-                PulsarModLoader.Utilities.Logger.Info($"[EnsureTalentSizePatch] Talents: {__instance.Talents.Length} Talents Edit Time: {__instance.TalentsLocalEditTime.Length}");
             }
         }
     }
