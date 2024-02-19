@@ -13,6 +13,7 @@ namespace PulsarModLoader.Content.Talents
         public virtual string ExtendsModdedTalent { get { return ""; } } // Use talent name so can be ID'd later
         public virtual ETalents ExtendsDefaultTalent { get { return ETalents.MAX; } }
         public virtual int MinLevel { get { return 0; } }
+        public virtual int[] Race { get { return null; } } // 0 = Human, 1 = Sylvassi, 2 = Robot
 
         public virtual TalentInfo TalentInfo
         {
