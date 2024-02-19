@@ -281,6 +281,7 @@ namespace PulsarModLoader
 
             // Activate all managers
             _ = PulsarModLoader.Content.Talents.TalentModManager.Instance;
+            _ = PulsarModLoader.Content.Talents.TalentTreeModManager.Instance;
             _ = PulsarModLoader.Content.Items.ItemModManager.Instance;
             _ = PulsarModLoader.Content.Components.AutoTurret.AutoTurretModManager.Instance;
             _ = PulsarModLoader.Content.Components.CaptainsChair.CaptainsChairModManager.Instance;

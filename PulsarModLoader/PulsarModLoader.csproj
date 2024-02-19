@@ -200,7 +200,8 @@
     <Compile Include="Content\Items\ItemModManager.cs" />
     <Compile Include="Content\Talents\TalentMod.cs" />
     <Compile Include="Content\Talents\TalentModManager.cs" />
-    <Compile Include="Content\Talents\TalentTrees.cs" />
+    <Compile Include="Content\Talents\TalentTreeMod.cs" />
+    <Compile Include="Content\Talents\TalentTreeModManager.cs" />
     <Compile Include="CustomGUI\GUIMain.cs" />
     <Compile Include="CustomGUI\ModSettingsMenu.cs" />
     <Compile Include="CustomGUI\PMLSettings.cs" />

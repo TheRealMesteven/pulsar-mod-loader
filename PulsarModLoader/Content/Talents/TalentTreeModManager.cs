@@ -1,7 +1,9 @@
 ﻿using HarmonyLib;
+using PulsarModLoader.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.Emit;
 using static PulsarModLoader.Patches.HarmonyHelpers;
 
@@ -28,10 +30,50 @@ namespace PulsarModLoader.Content.Talents
             };
             return PatchBySequence(instructions, target, patch, PatchMode.REPLACE, CheckMode.NONNULL);
         }
-        public static List<ETalents> Patch(PLTabMenu instance, PLPlayer pLPlayer) => TalentTrees.TalentsForClassSpecies(pLPlayer, pLPlayer.GetClassID());
+        public static List<ETalents> Patch(PLTabMenu instance, PLPlayer pLPlayer) => TalentTreeImplementation.TalentsForClassSpecies(pLPlayer, pLPlayer.GetClassID());
     }
+    public class TalentTreeModManager
+    {
+        private static TalentTreeModManager m_instance = null;
+        public readonly Dictionary<ETalents,TalentTreeMod> TalentOverrides = new Dictionary<ETalents, TalentTreeMod>();
+        public static TalentTreeModManager Instance
+        {
+            get
+            {
+                if (m_instance == null)
+                {
+                    m_instance = new TalentTreeModManager();
+                }
+                return m_instance;
+            }
+        }
 
-    internal class TalentTrees
+        TalentTreeModManager()
+        {
+            foreach (PulsarMod mod in ModManager.Instance.GetAllMods())
+            {
+                Assembly asm = mod.GetType().Assembly;
+                Type talentMod = typeof(TalentTreeMod);
+                foreach (Type t in asm.GetTypes())
+                {
+                    if (talentMod.IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract)
+                    {
+                        TalentTreeMod talentOverride = (TalentTreeMod)Activator.CreateInstance(t);
+                        if (!TalentOverrides.ContainsKey(talentOverride.Talent))
+                        {
+                            TalentOverrides.Add(talentOverride.Talent, talentOverride);
+                            Logger.Info($"Added Talent Override: '{talentOverride.Talent.ToString()}'");
+                        }
+                        else
+                        {
+                            Logger.Info($"Could not add Talent Override from {mod.Name} with the duplicate override of '{talentOverride.Talent.ToString()}'");
+                        }
+                    }
+                }
+            }
+        }
+    }
+    internal class TalentTreeImplementation
     {
         public static Dictionary<int, Dictionary<int, List<ETalents>>> cachedTalentsForClassSpecies = new Dictionary<int, Dictionary<int, List<ETalents>>>(5);
         // ClassID, RaceID, Talent List
@@ -46,9 +88,24 @@ namespace PulsarModLoader.Content.Talents
             List<ETalents> list = PLGlobal.TalentsForClass(ClassID);
             foreach (TalentMod talentMod in TalentModManager.Instance.TalentTypes)
             {
-                if (talentMod.ClassID != ClassID && talentMod.ClassID != -1) continue;
-                if (talentMod.Race != null && !talentMod.Race.Contains(RaceID)) continue;
+                if ((talentMod.ClassID != ClassID && talentMod.ClassID != -1)
+                    || (talentMod.Race != null && !talentMod.Race.Contains(RaceID))) continue;
                 list.Add((ETalents)TalentModManager.Instance.GetTalentIDFromName(talentMod.Name));
+            }
+            foreach(TalentTreeMod eTalents in TalentTreeModManager.Instance.TalentOverrides.Values)
+            {
+                if ((eTalents.ClassID != ClassID && eTalents.ClassID != -1)
+                    || (eTalents.Race != null && !eTalents.Race.Contains(RaceID)))
+                {
+                    if (list.Contains(eTalents.Talent)) list.Remove(eTalents.Talent);
+                    continue;
+                }
+                if (eTalents.Disable)
+                {
+                    if (list.Contains(eTalents.Talent)) list.Remove(eTalents.Talent);
+                    continue;
+                }
+                list.Add(eTalents.Talent);
             }
             //
 
