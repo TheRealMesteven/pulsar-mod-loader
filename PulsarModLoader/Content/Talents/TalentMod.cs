@@ -15,6 +15,8 @@ namespace PulsarModLoader.Content.Talents
         public virtual int MinLevel { get { return 0; } }
         public virtual int[] Race { get { return null; } } // 0 = Human, 1 = Sylvassi, 2 = Robot
         public virtual int[] Faction { get { return null; } } // -1 = Unaligned, 0 = CU, 1 = AOG, 2 = WD, 3 = FB, 5 = PT
+        public virtual string[] ConflictingModdedTalents { get { return null; } } // Use talent name so can be ID'd later
+        public virtual ETalents[] ConflictingDefaultTalents { get { return null; } }
 
         public virtual TalentInfo TalentInfo
         {

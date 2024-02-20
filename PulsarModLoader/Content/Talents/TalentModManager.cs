@@ -149,4 +149,75 @@ namespace PulsarModLoader.Content.Talents
         }
         public static int Patch() => TalentModManager.Instance.moddedTalentMaxType;
     }
+
+    // Hide conflicting Talents
+    [HarmonyPatch(typeof(PLTabMenu), "UpdateTDs")]
+    class LockConflictingTalents
+    {
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            List<CodeInstruction> target = new List<CodeInstruction>()
+            {
+                new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(PLServer), "Instance")),
+                new CodeInstruction(OpCodes.Ldloc_S),       // etalents
+                new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(PLServer), "IsTalentUnlocked", new Type[] { typeof(ETalents) }))
+            };
+            int NextInstruction = FindSequence(instructions, target, CheckMode.NONNULL);
+            List<CodeInstruction> patch = new List<CodeInstruction>()
+            {
+                new CodeInstruction(OpCodes.Ldarg_0),       // PLTabMenu Instance
+                instructions.ToList()[NextInstruction - 2], // etalents
+                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(LockConflictingTalents), "Replacement", new Type[] { typeof(PLTabMenu), typeof(ETalents) }))
+            };
+            return PatchBySequence(instructions, target, patch, PatchMode.REPLACE, CheckMode.NONNULL);
+        }
+        public static bool Replacement(PLTabMenu instance, ETalents inTalent)
+        {
+            PLPlayer player = PLServer.Instance.GetPlayerFromPlayerID(instance.TalentsListSelectedPlayerID);
+            return PLServer.Instance.IsTalentUnlocked(inTalent) && !HasConflictingTalents(player, inTalent);
+        }
+        private static bool HasConflictingTalents(PLPlayer player, ETalents inTalent)
+        {
+            // TODO: Cache this stuff as there is a lot of for loops in an update script!
+            int subtypeformodded = (int)inTalent - TalentModManager.Instance.vanillaTalentMaxType;
+            if (subtypeformodded <= TalentModManager.Instance.TalentTypes.Count && subtypeformodded > -1)
+            {
+                TalentMod talentMod = TalentModManager.Instance.TalentTypes[subtypeformodded];
+                if (talentMod.ConflictingDefaultTalents != null)
+                {
+                    foreach (ETalents eTalents in talentMod.ConflictingDefaultTalents)
+                    {
+                        if (player.Talents[(int)eTalents] != 0) return true;
+                    }
+                }
+                else if (talentMod.ConflictingModdedTalents != null)
+                {
+                    foreach(string sTalents in talentMod.ConflictingModdedTalents)
+                    {
+                        if (player.Talents[(int)TalentModManager.Instance.GetTalentIDFromName(sTalents)] != 0) return true;
+                    }
+                }
+                return false;
+            }
+            if (TalentTreeModManager.Instance.TalentOverrides.TryGetValue(inTalent, out TalentTreeMod talentTreeMod))
+            {
+                if (talentTreeMod.ConflictingDefaultTalents != null)
+                {
+                    foreach (ETalents eTalents in talentTreeMod.ConflictingDefaultTalents)
+                    {
+                        if (player.Talents[(int)eTalents] != 0) return true;
+                    }
+                }
+                else if (talentTreeMod.ConflictingModdedTalents != null)
+                {
+                    foreach (string sTalents in talentTreeMod.ConflictingModdedTalents)
+                    {
+                        if (player.Talents[(int)TalentModManager.Instance.GetTalentIDFromName(sTalents)] != 0) return true;
+                    }
+                }
+                return false;
+            }
+            return false;
+        }
+    }
 }
