@@ -28,8 +28,11 @@ namespace PulsarModLoader.Content.Talents
                 info.ResearchCost = ResearchCost;
                 info.WarpsToResearch = WarpsToResearch;
                 info.ExtendsTalent = ExtendsDefaultTalent;
-                //int extendsModded = TalentModManager.Instance.GetTalentIDFromName(ExtendsModdedTalent);
-                //if (extendsModded != -1) info.ExtendsTalent = (ETalents)extendsModded;
+                int extendsModded = TalentModManager.Instance.GetTalentIDFromName(ExtendsModdedTalent);
+                if (extendsModded != -1)
+                {
+                    info.ExtendsTalent = (ETalents)extendsModded;
+                }
                 info.MinLevel = MinLevel;
                 return info;
             }
