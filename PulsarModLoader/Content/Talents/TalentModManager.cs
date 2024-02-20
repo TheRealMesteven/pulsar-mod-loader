@@ -8,6 +8,7 @@ using static PulsarModLoader.Patches.HarmonyHelpers;
 using static HarmonyLib.AccessTools;
 using System.Reflection.Emit;
 using System.Linq;
+using ExitGames.Client.Photon.LoadBalancing;
 
 namespace PulsarModLoader.Content.Talents
 {
@@ -95,7 +96,7 @@ namespace PulsarModLoader.Content.Talents
     }
 
     // Increases the array size of Talents (Sometimes it isnt caught by Start Patch)
-    [HarmonyPatch(typeof(PLPlayer), "Update")]
+    [HarmonyPatch(typeof(PLPlayer), "Start")]
     class EnsureTalentSizePatch
     {
         static void Prefix(PLPlayer __instance)
@@ -107,6 +108,15 @@ namespace PulsarModLoader.Content.Talents
                 __instance.Talents = new ObscuredInt[TalentMaxSize];
                 __instance.TalentsLocalEditTime = new float[TalentMaxSize];
             }
+        }
+    }
+    [HarmonyPatch(typeof(PLPlayer), "ResetTalentPoints")]
+    class ResetCachedConflictTalents
+    {
+        static void Prefix(PLPlayer __instance)
+        {
+            if (LockConflictingTalents.cachedConflictingTalents.ContainsKey(__instance)) LockConflictingTalents.cachedConflictingTalents.Remove(__instance);
+            LockConflictingTalents.cachedConflictingTalents.Add(__instance, new ETalents[] { });
         }
     }
 
@@ -176,9 +186,11 @@ namespace PulsarModLoader.Content.Talents
             PLPlayer player = PLServer.Instance.GetPlayerFromPlayerID(instance.TalentsListSelectedPlayerID);
             return PLServer.Instance.IsTalentUnlocked(inTalent) && !HasConflictingTalents(player, inTalent);
         }
+        internal static Dictionary<PLPlayer, ETalents[]> cachedConflictingTalents = new Dictionary<PLPlayer, ETalents[]>();
         private static bool HasConflictingTalents(PLPlayer player, ETalents inTalent)
         {
-            // TODO: Cache this stuff as there is a lot of for loops in an update script!
+            if (!cachedConflictingTalents.ContainsKey(player)) LockConflictingTalents.cachedConflictingTalents.Add(player, new ETalents[] { });
+            else if (cachedConflictingTalents[player].Contains(inTalent)) return true;
             int subtypeformodded = (int)inTalent - TalentModManager.Instance.vanillaTalentMaxType;
             if (subtypeformodded <= TalentModManager.Instance.TalentTypes.Count && subtypeformodded > -1)
             {
@@ -187,14 +199,23 @@ namespace PulsarModLoader.Content.Talents
                 {
                     foreach (ETalents eTalents in talentMod.ConflictingDefaultTalents)
                     {
-                        if (player.Talents[(int)eTalents] != 0) return true;
+                        if (player.Talents[(int)eTalents] != 0)
+                        {
+                            cachedConflictingTalents[player].Append(inTalent);
+                            return true;
+                        }
                     }
                 }
                 else if (talentMod.ConflictingModdedTalents != null)
                 {
                     foreach(string sTalents in talentMod.ConflictingModdedTalents)
                     {
-                        if (player.Talents[(int)TalentModManager.Instance.GetTalentIDFromName(sTalents)] != 0) return true;
+                        ETalents eTalents = (ETalents)TalentModManager.Instance.GetTalentIDFromName(sTalents);
+                        if (player.Talents[(int)eTalents] != 0)
+                        {
+                            cachedConflictingTalents[player].Append(inTalent);
+                            return true;
+                        }
                     }
                 }
                 return false;
@@ -205,14 +226,23 @@ namespace PulsarModLoader.Content.Talents
                 {
                     foreach (ETalents eTalents in talentTreeMod.ConflictingDefaultTalents)
                     {
-                        if (player.Talents[(int)eTalents] != 0) return true;
+                        if (player.Talents[(int)eTalents] != 0)
+                        {
+                            cachedConflictingTalents[player].Append(inTalent);
+                            return true;
+                        }
                     }
                 }
                 else if (talentTreeMod.ConflictingModdedTalents != null)
                 {
                     foreach (string sTalents in talentTreeMod.ConflictingModdedTalents)
                     {
-                        if (player.Talents[(int)TalentModManager.Instance.GetTalentIDFromName(sTalents)] != 0) return true;
+                        ETalents eTalents = (ETalents)TalentModManager.Instance.GetTalentIDFromName(sTalents);
+                        if (player.Talents[(int)eTalents] != 0)
+                        {
+                            cachedConflictingTalents[player].Append(inTalent);
+                            return true;
+                        }
                     }
                 }
                 return false;
