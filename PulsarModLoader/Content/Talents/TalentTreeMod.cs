@@ -11,5 +11,6 @@ namespace PulsarModLoader.Content.Talents
         public virtual bool Disable { get { return false; } }
         public virtual string[] ConflictingModdedTalents { get { return null; } } // Use talent name so can be ID'd later
         public virtual ETalents[] ConflictingDefaultTalents { get { return null; } }
+        public virtual bool BotTalent { get { return false; } }
     }
 }
