@@ -2,6 +2,7 @@
 using HarmonyLib;
 using BepInEx.Logging;
 using System;
+using UnityEngine;
 
 
 namespace PulsarManager
@@ -24,22 +25,22 @@ namespace PulsarManager
             catch (Exception e) { Log.LogError(e); }
 
             //Events Init
-            //new PulsarModLoader.Events();
+            new PulsarManager.Events();
 
             //Modmanager GUI Init.
-            //new GameObject("ModManager", typeof(CustomGUI.GUIMain)) { hideFlags = HideFlags.HideAndDontSave };
+            new GameObject("ModManager", typeof(CustomGUI.GUIMain)) { hideFlags = HideFlags.HideAndDontSave };
 
             //SaveDataManager Init()
-            //new SaveData.SaveDataManager();
+            new SaveData.SaveDataManager();
 
             //KeybindManager Init()
-            //_ = PulsarModLoader.Keybinds.KeybindManager.Instance;
+            _ = PulsarManager.Keybinds.KeybindManager.Instance;
 
             //MP Mod Checks
-            //new MPModChecks.MPModCheckManager();
+            new MPModChecks.MPModCheckManager();
 
             //ModLoading
-            //ModManager.Instance.LoadModsDirectory(ModManager.GetModsDir());
+            ModManager.Instance.LoadModsDirectory(ModManager.GetModsDir());
 
             Log.LogInfo($"{MyPluginInfo.PLUGIN_GUID} Initialized.");
         }
