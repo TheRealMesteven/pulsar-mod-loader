@@ -9,6 +9,7 @@ namespace PulsarManager.Patches
         {
             static bool Prefix()
             {
+                BepinPlugin.Log.LogInfo("ONINJECTIONCHEATDETECTED PATCH APPLYING");
                 return false;
             }
         }
@@ -25,6 +26,7 @@ namespace PulsarManager.Patches
         {
             static bool Prefix()
             {
+                BepinPlugin.Log.LogInfo("ONINJECTIONCHEATDETECTED PATCH APPLYING");
                 return false;
             }
         }

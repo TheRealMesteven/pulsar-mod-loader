@@ -3,6 +3,8 @@ using HarmonyLib;
 using BepInEx.Logging;
 using System;
 using UnityEngine;
+using System.Reflection;
+using PulsarManager.Patches;
 
 
 namespace PulsarManager
@@ -20,29 +22,23 @@ namespace PulsarManager
             instance = this;
             Log = Logger;
 
-            //Wrapped with try catch. If PatchAll fails, further code does not run.
-            try { Harmony.PatchAll(); }
-            catch (Exception e) { Log.LogError(e); }
+            try
+            {
+                //File.WriteAllText("doorstop_hello.log", "Hello from Unity!");
+                PMLInject();
+                Log.LogInfo($"{MyPluginInfo.PLUGIN_GUID} Initialized.");
+            }
+            catch (Exception e)
+            {
+                Log.LogInfo($"{MyPluginInfo.PLUGIN_GUID} Init Exception\n{e}");
+            }
 
-            //Events Init
-            new PulsarManager.Events();
+        }
 
-            //Modmanager GUI Init.
-            new GameObject("ModManager", typeof(CustomGUI.GUIMain)) { hideFlags = HideFlags.HideAndDontSave };
-
-            //SaveDataManager Init()
-            new SaveData.SaveDataManager();
-
-            //KeybindManager Init()
-            _ = PulsarManager.Keybinds.KeybindManager.Instance;
-
-            //MP Mod Checks
-            new MPModChecks.MPModCheckManager();
-
-            //ModLoading
-            ModManager.Instance.LoadModsDirectory(ModManager.GetModsDir());
-
-            Log.LogInfo($"{MyPluginInfo.PLUGIN_GUID} Initialized.");
+        private static void PMLInject()
+        {
+            //Get PLGlobal::Start Patched
+            Harmony.Patch(AccessTools.Method(typeof(PLGlobal), "Start"), new HarmonyMethod(typeof(PLGlobalStart), "Prefix"));
         }
     }
 }
