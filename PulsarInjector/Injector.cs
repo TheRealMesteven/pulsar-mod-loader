@@ -299,6 +299,7 @@ namespace PulsarInjector
 
             CopyFileToDir(sourceDir, targetAssemblyDir, PulsarModLoaderDll);
             CopyFileToDir(sourceDir, targetAssemblyDir, "0Harmony.dll");
+            CopyFileToDir(sourceDir, targetAssemblyDir, "BepInEx.dll");
         }
 
         static void CopyFileToDir(string sourceDir, string destinationDir, string fileName)

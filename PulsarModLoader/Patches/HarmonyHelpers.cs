@@ -50,14 +50,17 @@ namespace PulsarModLoader.Patches
         {
             List<CodeInstruction> Instructions = instructions.ToList();
 
-            foreach (var ins in targetSequence)
+            if (BepinPlugin.instance != null)
             {
-                if (ShortToLongMap.TryGetValue(ins.opcode, out var longOpCode))
+                foreach (var ins in targetSequence)
                 {
-                    ins.opcode = longOpCode;
-                    if (showDebugOutput)
+                    if (ShortToLongMap.TryGetValue(ins.opcode, out var longOpCode))
                     {
-                        Logger.Info($"Converting the opcode {longOpCode}_s into {longOpCode} because HarmonyX normalises this way");
+                        ins.opcode = longOpCode;
+                        if (showDebugOutput)
+                        {
+                            Logger.Info($"Converting the opcode {longOpCode}_s into {longOpCode} because HarmonyX normalises this way");
+                        }
                     }
                 }
             }
