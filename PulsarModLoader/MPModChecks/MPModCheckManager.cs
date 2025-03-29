@@ -105,7 +105,7 @@ namespace PulsarModLoader.MPModChecks
 
         internal Dictionary<PhotonPlayer, MPUserDataBlock> NetworkedPeersModLists = new Dictionary<PhotonPlayer, MPUserDataBlock>();
 
-        private int HighestLevelOfMPMods = 0;
+        public MPRequirement HighestLevelOfMPMods { get; private set; } = MPRequirement.None;
 
         internal void SendModlistToClient(PhotonPlayer photonPlayer)
         {
@@ -218,9 +218,9 @@ namespace PulsarModLoader.MPModChecks
             {
                 if (mod.MPRequirements != (int)MPRequirement.HideFromServerList)
                 {
-                    if (mod.MPRequirements != (int)MPRequirement.MatchVersion && (mod.MPRequirements == (int)MPRequirement.Host || mod.MPRequirements == (int)MPRequirement.All) && mod.MPRequirements > HighestLevelOfMPMods)
+                    if (mod.MPRequirements != (int)MPRequirement.MatchVersion && (mod.MPRequirements == (int)MPRequirement.Host || mod.MPRequirements == (int)MPRequirement.All) && mod.MPRequirements > (int)HighestLevelOfMPMods)
                     {
-                        HighestLevelOfMPMods = (mod.MPRequirements);
+                        HighestLevelOfMPMods = (MPRequirement)mod.MPRequirements;
                     }
                     modList.Add(mod);
                 }
@@ -269,8 +269,9 @@ namespace PulsarModLoader.MPModChecks
                     writer.Write(dataBlock.ModID);              //string ModID
                 }
             }
-
-			return dataStream.ToArray();
+            byte[] data = dataStream.ToArray();
+            dataStream.Dispose();
+            return data;
         }
         
         /// <summary>
@@ -296,7 +297,9 @@ namespace PulsarModLoader.MPModChecks
                     writer.Write(dataBlock.Hash);               //byte[] Hash
                 }
             }
-            return dataStream.ToArray();
+            byte[] data = dataStream.ToArray();
+            dataStream.Dispose();
+            return data;
         }
 
         /// <summary>
@@ -325,6 +328,7 @@ namespace PulsarModLoader.MPModChecks
                         string ModID = reader.ReadString();
                         ModList[i] = new MPModDataBlock(HarmonyIdent, modname, ModVersion, MPRequirements, ModID);
                     }
+                    memoryStream.Dispose();
                     return new MPUserDataBlock(PMLVersion, ModList);
 
                 }
@@ -332,6 +336,7 @@ namespace PulsarModLoader.MPModChecks
             catch (Exception ex)
             {
                 Logger.Info($"Failed to read mod list from Hashless MPUserData, returning null.\n{ex.Message}");
+                memoryStream.Dispose();
                 return null;
             }
         }
@@ -363,12 +368,14 @@ namespace PulsarModLoader.MPModChecks
                         byte[] Hash = reader.ReadBytes(32);
                         ModList[i] = new MPModDataBlock(HarmonyIdent, modname, ModVersion, MPRequirements, ModID, Hash);
                     }
+                    memoryStream.Dispose();
                     return new MPUserDataBlock(PMLVersion, ModList);
                 }
             }
             catch (Exception ex)
             {
                 Logger.Info($"Failed to read mod list from Hashfull MPUserData, returning null.\n{ex.Message}");
+                memoryStream.Dispose();
                 return null;
             }
 
@@ -424,7 +431,7 @@ namespace PulsarModLoader.MPModChecks
             MPUserDataBlock HostModData = GetHostModList(room);
             if (HostModData.PMLVersion == string.Empty)
             {
-                if (HighestLevelOfMPMods == (int)MPRequirement.Host || HighestLevelOfMPMods == (int)MPRequirement.All)
+                if (HighestLevelOfMPMods == MPRequirement.Host || HighestLevelOfMPMods == MPRequirement.All)
                 {
                     PLNetworkManager.Instance.MainMenu.AddActiveMenu(new PLErrorMessageMenu($"<color=red>FAILED TO JOIN CREW!</color>\nMods requiring host installation or higher have been installed locally"));
 
@@ -659,7 +666,7 @@ namespace PulsarModLoader.MPModChecks
             }
             else //client wasn't found in mod list
             {
-                if (HighestLevelOfMPMods >= (int)MPRequirement.All)
+                if (HighestLevelOfMPMods >= MPRequirement.All)
                 {
                     Utilities.Logger.Info("Didn't receive message or proper modlist. proceeding to kick PhotonPlayer");
                     string message = $"You have been disconnected for not having the mod loader installed";
