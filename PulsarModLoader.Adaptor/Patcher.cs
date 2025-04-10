@@ -85,6 +85,9 @@ namespace PulsarModLoader.Adaptor
 
         public static void Patch(AssemblyDefinition assembly)
         { // The following code is the regular Injector patch. It is temporary and the IsModified is used so that regular injector still runs.
+            ModManager.ModsDir.Add(Paths.PluginPath);
+            Log.LogInfo($"Added {Paths.PluginPath} to the mod directories.");
+
             if (IsModified(assembly))
             {
                 Log.LogInfo("The assembly is already modified.");
@@ -93,7 +96,6 @@ namespace PulsarModLoader.Adaptor
 
             PatchMethod(assembly, "PLGlobal", "Start", typeof(LoggingInjections), "LoggingCleanup");
             PatchMethod(assembly, "PLGlobal", "Awake", typeof(HarmonyInjector), "InitializeHarmony");
-
         }
 
         internal static bool IsModified(AssemblyDefinition targetAssembly)
