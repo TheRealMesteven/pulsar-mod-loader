@@ -34,6 +34,7 @@ namespace PulsarModLoader.Patches
             {
                 Logger.Info($"[PatchBySequence] Called by assembly: {assemblyName}, class: {className}, method: {methodName}");
             }
+
             for (int i = 0; i < Instructions.Count; i++) //Check every Instruction in the given list if it is the correct Instruction set
             {
                 bool targetSequenceStillFits = i + targetSize <= Instructions.Count; //calculate if target sequence fits in Instructions.
@@ -82,6 +83,10 @@ namespace PulsarModLoader.Patches
                 else //if targetsequence didn't fit in what was left of array (couldn't find target sequence)
                 {
                     StringBuilder sb = new StringBuilder();
+                    if (!showDebugOutput && GetCallingAssemblyName(out string assemblyName1, out string className1, out string methodName1))
+                    {
+                        Logger.Info($"[PatchBySequence] Called by assembly: {assemblyName1}, class: {className1}, method: {methodName1}");
+                    }
                     sb.AppendLine($"Failed to patch by sequence: couldn't find target sequence.  This might be okay in certain cases.");
 
                     // Cut down the stack trace because it's 20 lines of unhelpful reflection internals.
@@ -115,6 +120,10 @@ namespace PulsarModLoader.Patches
 
             CodeInstruction targetStart = targetSequence.ElementAt(0);
             int targetSize = targetSequence.Count();
+            if (showDebugOutput && GetCallingAssemblyName(out string assemblyName, out string className, out string methodName))
+            {
+                Logger.Info($"[FindSequence] Called by assembly: {assemblyName}, class: {className}, method: {methodName}");
+            }
 
             for (int i = 0; i < Instructions.Count; i++)
             {
@@ -150,7 +159,6 @@ namespace PulsarModLoader.Patches
                 else
                 {
                     StringBuilder sb = new StringBuilder();
-
                     sb.AppendLine($"Couldn't find target sequence.  This might be okay in certain cases.");
 
                     // Cut down the stack trace because it's 20 lines of unhelpful reflection internals.
@@ -292,7 +300,7 @@ namespace PulsarModLoader.Patches
             className = "Unknown";
             methodName = "Unknown";
             var trace = new System.Diagnostics.StackTrace(skipFrames: 2);
-            int count = 10;
+            int count = 5;
             foreach (var frame in trace.GetFrames())
             {
                 if (count <= 0) break;
@@ -308,8 +316,7 @@ namespace PulsarModLoader.Patches
                 // Skip system/internal frames
                 if (!assemblyname.StartsWith("System") &&
                     !assemblyname.StartsWith("Harmony") &&
-                    !assemblyname.StartsWith("BepInEx") &&
-                    !assemblyname.StartsWith("PulsarModLoader"))
+                    !assemblyname.StartsWith("BepInEx"))
                 {
                     className = declaringType.FullName;
                     methodName = method.Name;
