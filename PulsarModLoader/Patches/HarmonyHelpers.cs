@@ -30,6 +30,10 @@ namespace PulsarModLoader.Patches
 
             CodeInstruction targetStart = targetSequence.ElementAt(0);
             int targetSize = targetSequence.Count();
+            if (showDebugOutput && GetCallingAssemblyName(out string assemblyName, out string className, out string methodName))
+            {
+                Logger.Info($"[PatchBySequence] Called by assembly: {assemblyName}, class: {className}, method: {methodName}");
+            }
 
             for (int i = 0; i < Instructions.Count; i++) //Check every Instruction in the given list if it is the correct Instruction set
             {
@@ -38,7 +42,6 @@ namespace PulsarModLoader.Patches
                 if (targetSequenceStillFits) //stop if not enough lines capable of fitting target sequence
                 {
                     bool foundTargetSequence = true;
-
                     for (int x = 0; x < targetSize && foundTargetSequence; x++) //compare each element of the new sequence to the old to see if it is the same. stop for loop early if the targetsequence
                     {
                         foundTargetSequence = Instructions[i + x].opcode.Equals(targetSequence.ElementAt(x).opcode);
@@ -80,7 +83,10 @@ namespace PulsarModLoader.Patches
                 else //if targetsequence didn't fit in what was left of array (couldn't find target sequence)
                 {
                     StringBuilder sb = new StringBuilder();
-
+                    if (!showDebugOutput && GetCallingAssemblyName(out string assemblyName1, out string className1, out string methodName1))
+                    {
+                        Logger.Info($"[PatchBySequence] Called by assembly: {assemblyName1}, class: {className1}, method: {methodName1}");
+                    }
                     sb.AppendLine($"Failed to patch by sequence: couldn't find target sequence.  This might be okay in certain cases.");
 
                     // Cut down the stack trace because it's 20 lines of unhelpful reflection internals.
@@ -114,6 +120,10 @@ namespace PulsarModLoader.Patches
 
             CodeInstruction targetStart = targetSequence.ElementAt(0);
             int targetSize = targetSequence.Count();
+            if (showDebugOutput && GetCallingAssemblyName(out string assemblyName, out string className, out string methodName))
+            {
+                Logger.Info($"[FindSequence] Called by assembly: {assemblyName}, class: {className}, method: {methodName}");
+            }
 
             for (int i = 0; i < Instructions.Count; i++)
             {
@@ -149,7 +159,6 @@ namespace PulsarModLoader.Patches
                 else
                 {
                     StringBuilder sb = new StringBuilder();
-
                     sb.AppendLine($"Couldn't find target sequence.  This might be okay in certain cases.");
 
                     // Cut down the stack trace because it's 20 lines of unhelpful reflection internals.
@@ -276,6 +285,46 @@ namespace PulsarModLoader.Patches
         public static ExceptionBlock Clone(this ExceptionBlock block)
         {
             return new ExceptionBlock(block.blockType, block.catchType);
+        }
+
+        /// <summary>
+        /// Uses StackTrace to find calling assembly. Limited to 10 attempts and ignores System, Harmony, BepInEx and PulsarModLoader.
+        /// </summary>
+        /// <param name="assemblyname">Name of assembly calling the method.</param>
+        /// <param name="className">Name of the class calling the method.</param>
+        /// <param name="methodName">Name of the method calling the method.</param>
+        /// <returns>True/False whether it was successful</returns>
+        public static bool GetCallingAssemblyName(out string assemblyname, out string className, out string methodName)
+        {
+            assemblyname = "Unknown";
+            className = "Unknown";
+            methodName = "Unknown";
+            var trace = new System.Diagnostics.StackTrace(skipFrames: 2);
+            int count = 5;
+            foreach (var frame in trace.GetFrames())
+            {
+                if (count <= 0) break;
+                var method = frame.GetMethod();
+                if (method == null) continue;
+
+                var declaringType = method.DeclaringType;
+                if (declaringType == null) continue;
+
+                var assembly = declaringType.Assembly;
+                assemblyname = assembly.GetName().Name;
+
+                // Skip system/internal frames
+                if (!assemblyname.StartsWith("System") &&
+                    !assemblyname.StartsWith("Harmony") &&
+                    !assemblyname.StartsWith("BepInEx"))
+                {
+                    className = declaringType.FullName;
+                    methodName = method.Name;
+                    return true;
+                }
+                count--;
+            }
+            return false;
         }
     }
 }

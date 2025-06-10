@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection.Emit;
+using UnityEngine;
+using Logger = PulsarModLoader.Utilities.Logger;
 
 namespace PulsarModLoader.SaveData
 {
@@ -78,7 +80,7 @@ namespace PulsarModLoader.SaveData
             {
                 try
                 {
-                    PulsarModLoader.Utilities.Logger.Info($"Writing: {saveData.MyMod.HarmonyIdentifier()}::{saveData.Identifier()} pos: {writer.BaseStream.Position}");
+                    Logger.Info($"Writing: {saveData.MyMod.HarmonyIdentifier()}::{saveData.Identifier()} pos: {writer.BaseStream.Position}");
                     byte[] modData = saveData.SaveData();          //Collect Save data from mod
 
                     //SaveDataHeader
@@ -212,18 +214,107 @@ namespace PulsarModLoader.SaveData
     {
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
+            /// BepInEx fails to do the `foreach (PLPersistantDialogueActor plpersistantDialogueActor in PLServer.Instance.AllPDAs)` `continue` despite reaching it.
+            /// The following replaces the whole foreach with a functional replacement.
+            List<CodeInstruction> codeInstructions = instructions.ToList();
             List<CodeInstruction> targetsequence = new List<CodeInstruction>()
+            {
+                new CodeInstruction(OpCodes.Callvirt),
+                new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(PLServer), "Instance")),
+                new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(PLServer), "AllPDAs")),
+                new CodeInstruction(OpCodes.Callvirt)
+            };
+            int start = HarmonyHelpers.FindSequence(instructions, targetsequence, HarmonyHelpers.CheckMode.NONNULL) - 3;
+
+            targetsequence = new List<CodeInstruction>()
+            {
+                new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(PLServer), "Instance")),
+                new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(PLServer), "get_AllPSIs")),
+                new CodeInstruction(OpCodes.Callvirt)
+            };
+            int end = HarmonyHelpers.FindSequence(instructions, targetsequence, HarmonyHelpers.CheckMode.NONNULL) - 5;
+            targetsequence = codeInstructions.GetRange(start, end - start);
+
+            List<CodeInstruction> injectedsequence = new List<CodeInstruction>()
+            {
+                new CodeInstruction(OpCodes.Ldarg_0),
+                new CodeInstruction(OpCodes.Ldloc_3),
+                new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(SavePatch), "Replacement")),
+            };
+            instructions = HarmonyHelpers.PatchBySequence(instructions, targetsequence, injectedsequence, HarmonyHelpers.PatchMode.REPLACE);
+
+            /// Mod Loader add save data
+            targetsequence = new List<CodeInstruction>()
             {
                 new CodeInstruction(OpCodes.Ldloc_3),
                 new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(BinaryWriter), "Close")),
             };
-            List<CodeInstruction> injectedsequence = new List<CodeInstruction>()
+            injectedsequence = new List<CodeInstruction>()
             {
                 new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(SaveDataManager), "Instance")),
                 new CodeInstruction(OpCodes.Ldloc_3),
                 new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(SaveDataManager), "SaveDatas")),
             };
             return HarmonyHelpers.PatchBySequence(instructions, targetsequence, injectedsequence, HarmonyHelpers.PatchMode.BEFORE);
+        }
+        public static void Replacement(PLSaveGameIO __instance, BinaryWriter binaryWriter)
+        {
+            foreach (PLPersistantDialogueActor plpersistantDialogueActor in PLServer.Instance.AllPDAs)
+            {
+                if (plpersistantDialogueActor == null)
+                    continue;
+
+                var plpersistantDialogueActorNPC = plpersistantDialogueActor as PLPersistantDialogueActorNPC;
+                var plpersistantDialogueActorShip = plpersistantDialogueActor as PLPersistantDialogueActorShip;
+
+                bool wroteActorType = false;
+
+                if (plpersistantDialogueActorNPC != null)
+                {
+                    binaryWriter.Write(0);
+                    binaryWriter.Write(plpersistantDialogueActorNPC.Hostile);
+                    binaryWriter.Write(plpersistantDialogueActorNPC.DialogueActorID);
+                    try
+                    {
+                        binaryWriter.Write(plpersistantDialogueActorNPC.NPCName);
+                    }
+                    catch (ArgumentNullException)
+                    {
+                        Debug.DebugBreak();
+                    }
+                    wroteActorType = true;
+                }
+                else if (plpersistantDialogueActorShip != null)
+                {
+                    binaryWriter.Write(1);
+                    binaryWriter.Write(plpersistantDialogueActorShip.Hostile);
+                    binaryWriter.Write(plpersistantDialogueActorShip.DialogueActorID);
+                    binaryWriter.Write(plpersistantDialogueActorShip.ShipName);
+                    binaryWriter.Write(plpersistantDialogueActorShip.SpecialActionCompleted);
+                    binaryWriter.Write(plpersistantDialogueActorShip.LinesToShowPercent.Count);
+                    foreach (var obscuredInt3 in plpersistantDialogueActorShip.LinesToShowPercent)
+                    {
+                        binaryWriter.Write(obscuredInt3);
+                    }
+                    wroteActorType = true;
+                }
+                else
+                {
+                    binaryWriter.Write(2);
+                    wroteActorType = true;
+                }
+
+                if (wroteActorType)
+                {
+                    int count4 = plpersistantDialogueActor.LinesAleradyDisplayed.Count;
+                    binaryWriter.Write(count4);
+                    foreach (var obscuredInt2 in plpersistantDialogueActor.LinesAleradyDisplayed)
+                    {
+                        int num6 = obscuredInt2;
+                        binaryWriter.Write(num6);
+                    }
+                }
+            }
         }
     }
     [HarmonyPatch(typeof(PLSaveGameIO), "LoadFromFile")]

@@ -129,10 +129,7 @@ namespace PulsarModLoader
         /// Gets mods directory
         /// </summary>
         /// <returns>Mods Directory Path</returns>
-        public static string GetModsDir()
-        {
-            return Path.Combine(Directory.GetCurrentDirectory(), "Mods");
-        }
+        public static List<string> ModsDir = new List<string> { Path.Combine(Directory.GetCurrentDirectory(), "Mods") };
 
         /// <summary>
         /// Gets the PulsarMod Class of the given mod name.
@@ -207,76 +204,80 @@ namespace PulsarModLoader
         /// <summary>
         /// Loads all mods found in the given directory
         /// </summary>
-        /// <param name="modsDir"></param>
-        public void LoadModsDirectory(string modsDir)
+        public void LoadMods()
         {
             //Delays MPModListRefresh
             MPModCheckManager.Instance.HoldMPModListRefresh();
 
-            Logger.Info($"Attempting to load mods from {modsDir}");
+            Logger.Info($"Modded Directories Count {ModManager.ModsDir.Count()}");
 
-            // Manage directories
-            if (!Directory.Exists(modsDir))
+            //Iterates through GetModsDir (Can patch in new directories)
+            foreach (string modsDir in ModManager.ModsDir)
             {
-                Directory.CreateDirectory(modsDir);
-            }
-            modDirectories.Add(modsDir);
+                Logger.Info($"Attempting to load mods from {modsDir}");
 
-            //Unzip mods
-            if (PMLConfig.ZipModLoad)
-            {
-                foreach (string ZipPath in Directory.GetFiles(modsDir, "*.zip"))
+                // Manage directories
+                if (!Directory.Exists(modsDir))
                 {
-                    string ZipExtractPath = Path.GetFullPath(modsDir);
+                    Directory.CreateDirectory(modsDir);
+                }
+                modDirectories.Add(modsDir);
 
-                    //Ensure that the mods dir path has a path seperator else add it.
-                    //This stops a path traversal attack from the zip file
-                    if (!ZipExtractPath.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal))
+                //Unzip mods
+                if (PMLConfig.ZipModLoad)
+                {
+                    foreach (string ZipPath in Directory.GetFiles(modsDir, "*.zip", SearchOption.AllDirectories))
                     {
-                        ZipExtractPath += Path.DirectorySeparatorChar;
-                    }
+                        string ZipExtractPath = Path.GetFullPath(modsDir);
 
-                    //Open zip file index and extract only dll files
-                    using (ZipArchive Archive = ZipFile.OpenRead(ZipPath))
-                    {
-                        foreach (ZipArchiveEntry Entry in Archive.Entries)
+                        //Ensure that the mods dir path has a path seperator else add it.
+                        //This stops a path traversal attack from the zip file
+                        if (!ZipExtractPath.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal))
                         {
-                            if (Entry.FullName.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+                            ZipExtractPath += Path.DirectorySeparatorChar;
+                        }
+
+                        //Open zip file index and extract only dll files
+                        using (ZipArchive Archive = ZipFile.OpenRead(ZipPath))
+                        {
+                            foreach (ZipArchiveEntry Entry in Archive.Entries)
                             {
-                                if (Entry.Length > PMLConfig.MaxLoadSizeBytes.Value)
+                                if (Entry.FullName.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    Logger.Info($"Error: Extraction of {Entry.Name} failed, Too Large!)");
-                                    break;
+                                    if (Entry.Length > PMLConfig.MaxLoadSizeBytes.Value)
+                                    {
+                                        Logger.Info($"Error: Extraction of {Entry.Name} failed, Too Large!)");
+                                        break;
+                                    }
+
+                                    string DestinationPath = Path.GetFullPath(Path.Combine(modsDir, Entry.Name));
+
+                                    if (File.Exists(DestinationPath))
+                                    {
+                                        File.Delete(DestinationPath);
+                                    }
+
+                                    Entry.ExtractToFile(DestinationPath);
                                 }
-
-                                string DestinationPath = Path.GetFullPath(Path.Combine(modsDir, Entry.Name));
-
-                                if (File.Exists(DestinationPath))
-                                {
-                                    File.Delete(DestinationPath);
-                                }
-
-                                Entry.ExtractToFile(DestinationPath);
                             }
                         }
-                    }
 
-                    if (PMLConfig.ZipModMode)
-                    {
-                        File.Delete(ZipPath);
+                        if (PMLConfig.ZipModMode)
+                        {
+                            File.Delete(ZipPath);
+                        }
                     }
                 }
-            }
 
-            // Load mods
-            foreach (string assemblyPath in Directory.GetFiles(modsDir, "*.dll"))
-            {
-                if (Path.GetFileName(assemblyPath) != "0Harmony.dll")
+                // Load mods
+                foreach (string assemblyPath in Directory.GetFiles(modsDir, "*.dll", SearchOption.AllDirectories))
                 {
-                    LoadMod(assemblyPath);
+                    if (Path.GetFileName(assemblyPath) != "0Harmony.dll")
+                    {
+                        LoadMod(assemblyPath);
+                    }
                 }
             }
-
             Logger.Info($"Finished loading {activeMods.Count} mods!");
 
             // Activate all managers
