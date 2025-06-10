@@ -1,7 +1,7 @@
-# [PULSAR Mod Loader][0]
+# [PULSAR Mod Loader - Injector][0]
 
 
-[0]: https://github.com/PULSAR-Modders/pulsar-mod-loader "PULSAR Mod Loader - Injector"
+[0]: https://github.com/PULSAR-Modders/pulsar-mod-loader "PULSAR Mod Loader"
 
 [![Build Status][1]][2]
 [![Download][3]][4]
@@ -18,6 +18,12 @@
 [8]: https://discord.gg/yBJGv4T "PML Discord"
 
 Custom injector which injects the mod loader into [*PULSAR: Lost Colony*][10].
+
+> [!CAUTION]  
+> The game uses `Harmony v2.2.2.0` whilst some Thunderstore mods will be for `HarmonyX v2.9.0.0` as such, unless created with backwards support, they will fail to load properly.
+
+> [!WARNING]  
+> Each time the game updates, the injector will need to be used again!
 
 [10]: http://www.pulsarthegame.com/ "PULSAR: Lost Colony"
 
@@ -39,8 +45,8 @@ Additionally, if the steam installation is not selected/viable an OpenFileDialog
 
 Afterwards, add mods to the `PULSARLostColony\Mods` directory and run PULSAR normally. If the mod loader is installed, using F5 will bring up a UI interface.  `PulsarModLoaderInstaller.exe` is not needed after this.
 
-> [!WARNING]  
-> Each time the game updates, the injector will need to be used again!
+![image](https://github.com/user-attachments/assets/c884382a-41d9-418f-8d98-45ef09009036)
+
 
 ### Removal
 
