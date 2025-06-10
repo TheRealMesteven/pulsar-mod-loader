@@ -28,23 +28,22 @@ namespace PulsarModLoader.Adaptor
             /// Load local .dll Assembly (In BepInEx patches directory)
             if (!AppDomain.CurrentDomain.GetAssemblies().Any(a => a.GetName().Name == AssemblyName))
             {
-                Log.LogInfo($"Attempt Loading '{AssemblyName}'");
                 int location = Assembly.GetExecutingAssembly().Location.LastIndexOf('\\');
                 int length = $"\\{Assembly.GetExecutingAssembly().GetName().Name}.dll".Length;
                 string path = Assembly.GetExecutingAssembly().Location.Remove(location, length) + $"\\{AssemblyName}.dll";
                 if (File.Exists(path))
                 {
                     Assembly.LoadFrom(path);
-                    Log.LogInfo($"Successfully loaded '{AssemblyName}'");
+                    Log.LogInfo($"Loaded '{AssemblyName}' successfully.");
                 }
                 else
                 {
-                    Log.LogWarning($"'{AssemblyName}' not found at expected location, and not already loaded.");
+                    Log.LogWarning($"Failed to load '{AssemblyName}' - not found at expected location!");
                 }
             }
             else
             {
-                Log.LogInfo($"'{AssemblyName}' already loaded");
+                Log.LogInfo($"Failed to load '{AssemblyName}' - assembly already loaded!");
             }
         }
 
@@ -55,7 +54,6 @@ namespace PulsarModLoader.Adaptor
 
             if (ilManipulatorType == null)
             {
-                Log.LogError("ILManipulator type not found.");
                 return;
             }
 
@@ -68,7 +66,6 @@ namespace PulsarModLoader.Adaptor
                 if (shortToLongMap != null)
                 {
                     // Clear the dictionary
-                    Log.LogDebug($"ShortToLongMap has length {shortToLongMap.Count}");
                     shortToLongMap.Clear();
                     Log.LogInfo($"Transpiler ShortToLongMap cleared (Used for Transpiler Normalization).");
                 }
@@ -85,8 +82,17 @@ namespace PulsarModLoader.Adaptor
         
         public static void Patch(AssemblyDefinition assembly)
         { // The following code is the regular Injector patch. It is temporary and the IsModified is used so that regular injector still runs.
-            ModManager.ModsDir.Add(Paths.PluginPath);
-            Log.LogInfo($"Added {Paths.PluginPath} to the mod directories.");
+            var modsDirField = typeof(ModManager).GetField("ModsDir", BindingFlags.Public | BindingFlags.Static);
+            if (modsDirField != null)
+            {
+                var modsDir = modsDirField.GetValue(null) as IList<string>;
+                modsDir?.Add(Paths.PluginPath);
+                Log.LogInfo($"Added {Paths.PluginPath} to the mod directories.");
+            }
+            else
+            {
+                Log.LogWarning("PulsarModLoader is outdated and cannot locate other directories!");
+            }
 
             if (IsModified(assembly))
             {
