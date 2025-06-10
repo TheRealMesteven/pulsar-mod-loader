@@ -20,6 +20,32 @@ namespace PulsarModLoader.Adaptor
         public static void Initialize()
         {
             NoTranspilerNormalization();
+            InjectAssemblies("PulsarModLoader");
+        }
+
+        public static void InjectAssemblies(string AssemblyName)
+        {
+            /// Load MonoMod.RuntimeDetour.dll as its required for HarmonyX (For injector installations)
+            if (!AppDomain.CurrentDomain.GetAssemblies().Any(a => a.GetName().Name == AssemblyName))
+            {
+                Log.LogInfo($"Attempt Loading '{AssemblyName}'");
+                int location = Assembly.GetExecutingAssembly().Location.LastIndexOf('\\');
+                int length = $"\\{Assembly.GetExecutingAssembly().GetName().Name}.dll".Length;
+                string path = Assembly.GetExecutingAssembly().Location.Remove(location, length) + $"\\{AssemblyName}.dll";
+                if (File.Exists(path))
+                {
+                    Assembly.LoadFrom(path);
+                    Log.LogInfo($"Successfully loaded '{AssemblyName}'");
+                }
+                else
+                {
+                    Log.LogWarning($"'{AssemblyName}' not found at expected location, and not already loaded.");
+                }
+            }
+            else
+            {
+                Log.LogInfo($"'{AssemblyName}' already loaded");
+            }
         }
 
         internal static void NoTranspilerNormalization()
@@ -117,7 +143,7 @@ namespace PulsarModLoader.Adaptor
 
             Instruction oldFirstInstruction = targetMethod.Body.Instructions[0];
             Instruction callToInjectedMethod = targetProcessor.Create(OpCodes.Call, sourceMethod);
-
+            
             targetProcessor.InsertBefore(oldFirstInstruction, callToInjectedMethod);
             Log.LogInfo($"Injected {sourceClassType.ToString()} successfully.");
         }
