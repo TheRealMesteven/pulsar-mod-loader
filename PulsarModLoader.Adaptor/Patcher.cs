@@ -25,7 +25,7 @@ namespace PulsarModLoader.Adaptor
 
         public static void InjectAssemblies(string AssemblyName)
         {
-            /// Load MonoMod.RuntimeDetour.dll as its required for HarmonyX (For injector installations)
+            /// Load local .dll Assembly (In BepInEx patches directory)
             if (!AppDomain.CurrentDomain.GetAssemblies().Any(a => a.GetName().Name == AssemblyName))
             {
                 Log.LogInfo($"Attempt Loading '{AssemblyName}'");
@@ -82,6 +82,7 @@ namespace PulsarModLoader.Adaptor
                 Log.LogWarning("Field ShortToLongMap not found. Transpiler short patches will be converted as standard with HarmonyX.");
             }
         }
+        
         public static void Patch(AssemblyDefinition assembly)
         { // The following code is the regular Injector patch. It is temporary and the IsModified is used so that regular injector still runs.
             ModManager.ModsDir.Add(Paths.PluginPath);
