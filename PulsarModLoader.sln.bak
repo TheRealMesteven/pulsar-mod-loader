@@ -5,7 +5,7 @@ VisualStudioVersion = 17.4.33110.190
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PulsarModLoader", "PulsarModLoader\PulsarModLoader.csproj", "{CF6CE9BA-9603-439D-9173-96C052C94417}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PulsarModLoader.Injector", "PulsarModLoader.Injector\PulsarModLoader.Injector.csproj", "{F15E6EFA-3584-4503-98E0-17D3E87900F5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PulsarModLoader.Injector", "PulsarInjector\PulsarModLoader.Injector.csproj", "{F15E6EFA-3584-4503-98E0-17D3E87900F5}"
 	ProjectSection(ProjectDependencies) = postProject
 		{CF6CE9BA-9603-439D-9173-96C052C94417} = {CF6CE9BA-9603-439D-9173-96C052C94417}
 	EndProjectSection
