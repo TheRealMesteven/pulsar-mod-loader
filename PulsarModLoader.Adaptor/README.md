@@ -1,7 +1,7 @@
-# [PULSAR Mod Loader][0]
+# [PULSAR Mod Loader - Adaptor][0]
 
 
-[0]: https://github.com/PULSAR-Modders/pulsar-mod-loader "PULSAR Mod Loader - Adaptor"
+[0]: https://github.com/PULSAR-Modders/pulsar-mod-loader "PULSAR Mod Loader"
 
 [![Build Status][1]][2]
 [![Download][3]][4]
@@ -43,13 +43,13 @@ Then, place `PulsarModLoader.dll` and `PulsarModLoader.Adaptor.dll` into the `Be
 > [!NOTE]  
 > You can also place `PulsarModLoader` into the `PULSARLostColony\Managed` directory, however it will prioritise loading from the patcher location.
 
-Afterwards, add mods to the `PULSARLostColony\Mods` directory or `BepInEx\Plugins` directory and run PULSAR normally.
+Afterwards, add mods to the `PULSARLostColony\Mods` directory or `BepInEx\plugins` directory and run PULSAR normally.
 
 ![image](https://github.com/user-attachments/assets/85e92f5b-adeb-46e3-9934-2170abef1c14)
 
 ### Removal
 
-Disable the patcher or remove `PulsarModLoader.dll` and `PulsarModLoader.Adaptor.dll` from `BepInEx\Plugins`
+Disable the patcher or remove `PulsarModLoader.dll` and `PulsarModLoader.Adaptor.dll` from `BepInEx\plugins`
 
 ## Creating Mods
 
