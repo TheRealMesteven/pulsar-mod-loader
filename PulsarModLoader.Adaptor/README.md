@@ -17,7 +17,7 @@
 [7]: https://img.shields.io/discord/458244416562397184.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2
 [8]: https://discord.gg/yBJGv4T "PML Discord"
 
-BepInEx Patcher which temporarily injects the mod loader into [*PULSAR: Lost Colony*][10].
+BepInEx patcher plugin which repeatedly injects the mod loader into [*PULSAR: Lost Colony*][10].
 
 [10]: http://www.pulsarthegame.com/ "PULSAR: Lost Colony"
 
@@ -33,15 +33,19 @@ Before running ensure your Pulsar installation is a Mono build. On Steam you can
 
 Next, install BepInEx either manually or through a mod manager such as: Gale, R2ModMan and Thunderstore.
 
-Then, place `PulsarModLoader.dll` and `PulsarModLoader.Adaptor.dll` into the `BepInEx\Patcher` folder. Then run PULSAR normally, if it is installed, using F5 will bring up a UI interface.
+![image](https://github.com/user-attachments/assets/df1d3a43-34f9-4d20-96d4-67a08584c853)
+
+
+Then, place `PulsarModLoader.dll` and `PulsarModLoader.Adaptor.dll` into the `BepInEx\patchers` folder. Then run PULSAR normally, if it is installed, using F5 will bring up a UI interface.
+
+![image](https://github.com/user-attachments/assets/2cfb714f-6024-4480-b9c3-d2fc24c84fa2)
 
 > [!NOTE]  
 > You can also place `PulsarModLoader` into the `PULSARLostColony\Managed` directory, however it will prioritise loading from the patcher location.
 
 Afterwards, add mods to the `PULSARLostColony\Mods` directory or `BepInEx\Plugins` directory and run PULSAR normally.
 
-> [!NOTE]  
-> Each time the game updates, the adaptor and mod loader will automatically inject, as long as neither breaks.
+![image](https://github.com/user-attachments/assets/85e92f5b-adeb-46e3-9934-2170abef1c14)
 
 ### Removal
 
