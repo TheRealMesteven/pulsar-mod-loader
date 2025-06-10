@@ -32,6 +32,9 @@ Before attempting to mod, ensure your Pulsar installation is a Mono build. On St
 
 - [Adaptor](https://github.com/PULSAR-Modders/pulsar-mod-loader/tree/master/PulsarModLoader.Adaptor) - BepInEx adaptor which allows the manager and mods to be loaded through BepInEx.
 
+### Mod Locations
+Currently, mods are primarily found on the [Pulsar Lost Colony: Crew Matchup Server][8] (Unofficial Discord). They will be coming soon to Thunderstore however.
+
 ## Features
 
 - [x] Method to inject mods into the game
