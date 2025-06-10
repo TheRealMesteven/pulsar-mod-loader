@@ -20,7 +20,6 @@ namespace PulsarModLoader.Adaptor
         public static void Initialize()
         {
             NoTranspilerNormalization();
-            CopyAcrossPML();
         }
 
         internal static void NoTranspilerNormalization()
@@ -57,30 +56,6 @@ namespace PulsarModLoader.Adaptor
                 Log.LogWarning("Field ShortToLongMap not found. Transpiler short patches will be converted as standard with HarmonyX.");
             }
         }
-
-        internal static void CopyAcrossPML()
-        {
-            string harmonyPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "PulsarModLoader.dll");
-            string managedPath = Path.Combine(Paths.ManagedPath, "PulsarModLoader.dll");
-            if (!File.Exists(managedPath))
-            {
-                if (File.Exists(harmonyPath))
-                {
-                    File.Copy(harmonyPath, managedPath, true);
-                    Log.LogInfo("Copied PulsarModLoader.dll into Managed folder.");
-                }
-                else
-                {
-                    Log.LogError("PulsarModLoader.dll could not be found anywhere! Ensure you have a copy in the BepInEx Patchers folder!");
-                }
-            }
-            else
-            {
-                Log.LogInfo("PulsarModLoader.dll already exists in Managed folder.");
-            }
-        }
-
-
         public static void Patch(AssemblyDefinition assembly)
         { // The following code is the regular Injector patch. It is temporary and the IsModified is used so that regular injector still runs.
             ModManager.ModsDir.Add(Paths.PluginPath);
