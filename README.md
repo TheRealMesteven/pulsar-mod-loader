@@ -17,7 +17,7 @@
 [7]: https://img.shields.io/discord/458244416562397184.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2
 [8]: https://discord.gg/yBJGv4T "PML Discord"
 
-A mod loader, utility and manager for [*PULSAR: Lost Colony*][10].
+A mod loader, library, and manager for [*PULSAR: Lost Colony*][10].
 
 [10]: http://www.pulsarthegame.com/ "PULSAR: Lost Colony"
 
